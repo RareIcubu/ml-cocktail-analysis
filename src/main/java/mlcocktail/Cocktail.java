@@ -4,11 +4,11 @@ import java.util.List;
 
 public class Cocktail{
     private String name;
-    private List<String> ingredients;
+    private List<Ingredient> ingredients;
     public String getName(){
         return name;
     }
-    public List<String> getIngredients(){
+    public List<Ingredient> getIngredients(){
         return ingredients;
     }
 
