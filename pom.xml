@@ -1,23 +1,49 @@
-<dependencies>
-  <!-- Parsowanie JSON -->
-  <dependency>
-    <groupId>com.google.code.gson</groupId>
-    <artifactId>gson</artifactId>
-    <version>2.8.9</version>
-  </dependency>
-  
-  <!-- Smile - ML, klasteryzacja, preprocessing -->
-  <dependency>
-    <groupId>com.github.haifengl</groupId>
-    <artifactId>smile-core</artifactId>
-    <version>2.6.0</version>
-  </dependency>
-  
-  <!-- XChart do wizualizacji -->
-  <dependency>
-    <groupId>org.knowm.xchart</groupId>
-    <artifactId>xchart</artifactId>
-    <version>3.8.1</version>
-  </dependency>
-</dependencies>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.example</groupId>
+    <artifactId>ml-cocktail-analysis</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <dependencies>
+        <!-- Parsowanie JSON -->
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.8.9</version>
+        </dependency>
+
+        <!-- Smile - ML, klasteryzacja, preprocessing -->
+        <dependency>
+            <groupId>com.github.haifengl</groupId>
+            <artifactId>smile-core</artifactId>
+            <version>2.6.0</version>
+        </dependency>
+
+        <!-- XChart do wizualizacji -->
+        <dependency>
+            <groupId>org.knowm.xchart</groupId>
+            <artifactId>xchart</artifactId>
+            <version>3.8.1</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.0.0</version>
+                <configuration>
+                    <mainClass>mlcocktail.Main</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
 
