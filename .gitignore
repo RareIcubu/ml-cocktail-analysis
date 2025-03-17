@@ -1,0 +1,24 @@
+.env
+# Maven output directory
+target/
+
+# IDE - IntelliJ IDEA
+.idea/
+*.iml
+out/
+
+# IDE - Eclipse
+.project
+.classpath
+.settings/
+
+# Pliki tymczasowe systemu
+.DS_Store
+Thumbs.db
+
+# Logi
+*.log
+
+# Inne pliki tymczasowe
+*.tmp
+
