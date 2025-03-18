@@ -3,6 +3,7 @@ package mlcocktail.eda;
 import java.util.List;
 import java.util.stream.Collectors;
 import mlcocktail.Cocktail;
+import mlcocktail.Ingredient;
 
 public class DataQuality{
     public static void missingIngredients(List<Cocktail> cocktails){
@@ -13,6 +14,21 @@ public class DataQuality{
         List<Cocktail> duplicates = cocktails.stream().filter(cocktail -> cocktail.getIngredients().size() != cocktail.getIngredients().stream().distinct().count()).collect(Collectors.toList());
         System.out.println("Number of cocktails with duplicate ingredients: " + duplicates.size());
     }
-
+  public static void missingFieldsInIngredients(List<Cocktail> cocktails) {
+        int missingCount = 0;
+        for (Cocktail cocktail : cocktails) {
+            if (cocktail.getIngredients() != null) {
+                for (Ingredient ingredient : cocktail.getIngredients()) {
+                    // Sprawdzamy, czy pole name lub measure jest puste lub null
+                    if (ingredient.getName() == null || ingredient.getName().trim().isEmpty() ||
+                        ingredient.getMeasure() == null || ingredient.getMeasure().trim().isEmpty()) {
+                        missingCount++;
+                        System.out.println("Missing field in ingredient: " + ingredient + " (Cocktail: " + cocktail.getName() + ")");
+                    }
+                }
+            }
+        }
+        System.out.println("Total number of ingredients with missing fields: " + missingCount);
+    }
 }
 
