@@ -11,7 +11,7 @@ public class ClusteringModel {
      * @param data - tablica wektorów cech koktajli
      * @param k    - liczba klastrów
      */
-    public static void clusterCocktails(double[][] data, int k) {
+    public static int[] clusterCocktails(double[][] data, int k) {
         // Wykonanie klasteryzacji metodą K-means
         KMeans kmeans = KMeans.fit(data, k);
         int[] labels = kmeans.y;  // etykiety klastrów dla każdego punktu
@@ -28,6 +28,7 @@ public class ClusteringModel {
         for (int i = 0; i < k; i++) {
             System.out.println("Cluster " + i + " centroid: " + Arrays.toString(kmeans.centroids[i]));
         }
+        return labels;
     }
 }
 

@@ -31,7 +31,9 @@ public class Main {
 
         // Klasteryzacja – ustawiamy liczbę klastrów, np. 4
         int k = 4;
-        ClusteringModel.clusterCocktails(data, k);
+        int[] labels = ClusteringModel.clusterCocktails(data, k);
+        double silhouetteScore = Evaluator.computeSilhouetteScore(data, labels);
+        System.out.println("Silhouette score: " + silhouetteScore);
     }
 }
 
