@@ -1,76 +1,94 @@
 package mlcocktail;
 
-import smile.math.distance.EuclideanDistance;
+import java.util.*;
 
-public class Evaluator{
+public class Evaluator {
+
+    /**
+     * Oblicza średni silhouette score dla zbioru danych i etykiet klastrów.
+     * Zakłada, że etykiety pochodzą z algorytmu klasteryzacji (np. KMeans) i są w zakresie 0..(k-1).
+     *
+     * @param data   macierz punktów (każdy punkt to wektor cech)
+     * @param labels etykiety klastrów dla każdego punktu
+     * @return średni silhouette score
+     */
     public static double computeSilhouetteScore(double[][] data, int[] labels) {
         int n = data.length;
         double totalSilhouette = 0.0;
-        int validCount = 0;
-        EuclideanDistance distance = new EuclideanDistance();
-        // Dla każdego punktu
-        for (int i = 0; i < n; i++) {
-            int clusterId = labels[i];
-            double a = 0.0; // średnia odległość do punktów w tym samym klastrze
-            int sameClusterCount = 0;
-            double b = Double.MAX_VALUE; // minimalna średnia odległość do punktów z innego klastra
+        int count = 0;
 
-            // Oblicz średnią odległość do punktów w tym samym klastrze
-            for (int j = 0; j < n; j++) {
-                if (i == j) continue;
-                if (labels[j] == clusterId) {
-                    a += distance.d(data[i], data[j]);
-                    sameClusterCount++;
+        // Grupujemy indeksy punktów według etykiety
+        Map<Integer, List<Integer>> clusters = new HashMap<>();
+        for (int i = 0; i < n; i++) {
+            int label = labels[i];
+            clusters.computeIfAbsent(label, k -> new ArrayList<>()).add(i);
+        }
+
+        // Dla każdego punktu obliczamy silhouette score
+        for (int i = 0; i < n; i++) {
+            int label = labels[i];
+            List<Integer> sameCluster = clusters.get(label);
+            if (sameCluster == null || sameCluster.size() <= 1) continue;
+
+            // a(i): średnia odległość do innych punktów w tym samym klastrze
+            double a = 0.0;
+            int intraCount = 0;
+            for (int j : sameCluster) {
+                // Dodajemy kontrolę, żeby upewnić się, że j mieści się w zakresie
+                if (j < 0 || j >= n) {
+                    System.err.println("Warning: skipping invalid index " + j);
+                    continue;
                 }
+                if (i == j) continue;
+                a += euclideanDistance(data[i], data[j]);
+                intraCount++;
             }
-            if (sameClusterCount > 0) {
-                a /= sameClusterCount;
+            if (intraCount > 0) {
+                a /= intraCount;
             } else {
-                // Jeżeli punkt jest jedyny w klastrze, silhouette score dla niego jest zdefiniowany jako 0
-                totalSilhouette += 0;
-                validCount++;
                 continue;
             }
 
-            // Dla każdego innego klastra, oblicz średnią odległość
-            // Najlepiej przejść po wszystkich punktach i grupować je według etykiety
-            // Możemy użyć tablicy do zliczenia sum i liczby punktów dla każdego klastra
-            int[] clusterCounts = new int[findMax(labels) + 1];
-            double[] clusterSums = new double[clusterCounts.length];
+            // b(i): najmniejsza średnia odległość do punktów z innego klastra
+            double b = Double.MAX_VALUE;
+            for (Map.Entry<Integer, List<Integer>> entry : clusters.entrySet()) {
+                if (entry.getKey() == label) continue;
+                List<Integer> otherCluster = entry.getValue();
+                double sum = 0.0;
+                int interCount = 0;
+                for (int j : otherCluster) {
+                    if (j < 0 || j >= n) {
+                        System.err.println("Warning: skipping invalid index " + j);
+                        continue;
+                    }
+                    sum += euclideanDistance(data[i], data[j]);
+                    interCount++;
+                }
+                if (interCount > 0) {
+                    double avg = sum / interCount;
+                    if (avg < b) {
+                        b = avg;
+                    }
+                }
+            }
 
-            for (int j = 0; j < n; j++) {
-                if (labels[j] != clusterId) {
-                    double dist = distance.d(data[i], data[j]);
-                    clusterSums[labels[j]] += dist;
-                    clusterCounts[labels[j]]++;
-                }
-            }
-            // Wybierz minimalną średnią odległość spośród innych klastrów
-            for (int c = 0; c < clusterCounts.length; c++) {
-                if (c == clusterId || clusterCounts[c] == 0) continue;
-                double avg = clusterSums[c] / clusterCounts[c];
-                if (avg < b) {
-                    b = avg;
-                }
-            }
             double s = (b - a) / Math.max(a, b);
             totalSilhouette += s;
-            validCount++;
+            count++;
         }
-        return totalSilhouette / validCount;
-    }
-    
-    /**
-     * Znajduje maksymalną wartość w tablicy etykiet, przydatne do określenia rozmiaru tablic pomocniczych.
-     */
-    private static int findMax(int[] arr) {
-        int max = arr[0];
-        for (int num : arr) {
-            if (num > max) {
-                max = num;
-            }
-        }
-        return max;
+
+        double score = count > 0 ? totalSilhouette / count : 0.0;
+        System.out.println("Średni silhouette score obliczony dla " + count + " punktów: " + score);
+        return score;
     }
 
+    private static double euclideanDistance(double[] a, double[] b) {
+        double sum = 0.0;
+        for (int i = 0; i < a.length; i++) {
+            double diff = a[i] - b[i];
+            sum += diff * diff;
+        }
+        return Math.sqrt(sum);
+    }
 }
+

@@ -25,6 +25,12 @@
         </dependency>
 
 
+        <dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>openblas-platform</artifactId>
+            <version>0.3.13-1.5.5</version>
+        </dependency>
+
         <!-- Smile - ML, klasteryzacja, preprocessing -->
         <dependency>
             <groupId>com.github.haifengl</groupId>
@@ -47,7 +53,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.0.0</version>
                 <configuration>
-                    <mainClass>mlcocktail.Main</mainClass>
+                    <mainClass>mlcocktail.EnhancedClusteringPipeline</mainClass>
                 </configuration>
             </plugin>
         </plugins>
