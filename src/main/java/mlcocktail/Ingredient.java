@@ -64,6 +64,13 @@ public class Ingredient {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", measure='" + measure + '\'' +
+                ", description='" + description + '\'' +
+                ", alcohol=" + alcohol +
+                ", type='" + type + '\'' +
+                ", percentage=" + percentage +
+                ", imageUrl='" + imageUrl + '\'' +
+                ", createdAt='" + createdAt + '\'' +
+                ", updatedAt='" + updatedAt + '\'' +
                 '}';
     }
 }

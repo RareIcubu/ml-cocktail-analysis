@@ -21,7 +21,7 @@ public class Main {
         DataQuality.duplicateIngredients(cocktails);
         DataQuality.missingFieldsInIngredients(cocktails);
         DataPreprocessor.normalizeCocktailNames(cocktails);
-        DataPreprocessor.fillMissingIngredientMeasure(cocktails);
+        DataPreprocessor.fillMissingIngredientFields(cocktails);
         DataPreprocessor.removeDuplicateIngredients(cocktails);
 
         // Augmentacja – ekstrakcja cech

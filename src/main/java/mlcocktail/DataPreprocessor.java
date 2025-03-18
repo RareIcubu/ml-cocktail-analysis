@@ -14,22 +14,39 @@ public class DataPreprocessor {
         }
     }
 
-    // Uzupełnienie brakujących wartości w polu measure składników
-    public static void fillMissingIngredientMeasure(List<Cocktail> cocktails) {
+    public static void fillMissingIngredientFields(List<Cocktail> cocktails) {
         for (Cocktail cocktail : cocktails) {
             if (cocktail.getIngredients() != null) {
                 for (Ingredient ingredient : cocktail.getIngredients()) {
+                    // Measure
                     if (ingredient.getMeasure() == null || ingredient.getMeasure().trim().isEmpty()) {
                         ingredient.setMeasure("unknown");
                     } else {
-                        // Opcjonalnie: normalizacja pola measure (usunięcie zbędnych spacji)
                         ingredient.setMeasure(ingredient.getMeasure().trim());
+                    }
+                    
+                    // Percentage – jeśli jest null, ustawiamy domyślnie 0.0
+                    if (ingredient.getPercentage() == null) {
+                        ingredient.setPercentage(0.0);
+                    }
+                    
+                    // Description – jeśli brak, ustawiamy domyślny tekst
+                    if (ingredient.getDescription() == null || ingredient.getDescription().trim().isEmpty()) {
+                        ingredient.setDescription("No description");
+                    } else {
+                        ingredient.setDescription(ingredient.getDescription().trim());
+                    }
+                    
+                    // Type – jeśli brak, ustawiamy "unknown"
+                    if (ingredient.getType() == null || ingredient.getType().trim().isEmpty()) {
+                        ingredient.setType("unknown");
+                    } else {
+                        ingredient.setType(ingredient.getType().trim());
                     }
                 }
             }
         }
-    }
-
+    }  
     // Usunięcie duplikatów składników w obrębie pojedynczego koktajlu
     public static void removeDuplicateIngredients(List<Cocktail> cocktails) {
         for (Cocktail cocktail : cocktails) {
