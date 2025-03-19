@@ -1,7 +1,12 @@
 package mlcocktail;
 
 import smile.clustering.KMeans;
-import smile.projection.PCA;
+//import smile.feature.extraction.PCA;
+import smile.feature.transform.Standardizer;
+import smile.data.DataFrame;
+import smile.data.vector.DoubleVector;
+import smile.data.transform.InvertibleColumnTransform;
+import java.util.stream.IntStream;
 import java.util.*;
 
 public class EnhancedClusteringPipeline {
@@ -20,72 +25,63 @@ public class EnhancedClusteringPipeline {
         DataPreprocessor.fillMissingIngredientFields(cocktails);
         DataPreprocessor.removeDuplicateIngredients(cocktails);
 
-        // Budujemy słownik składników, filtrując bardzo popularne składniki (>90% występowania)
+        // Budowa słownika składników
         double frequencyThreshold = 0.9;
         List<String> vocabulary = EnhancedFeatureExtractor.buildFilteredIngredientVocabulary(cocktails, frequencyThreshold);
         System.out.println("Filtered vocabulary size: " + vocabulary.size());
 
-        // Tworzymy TF-IDF wektory cech dla koktajli
+        // Tworzenie TF-IDF wektorów cech
         List<double[]> tfidfVectors = EnhancedFeatureExtractor.createTFIDFFeatureVectors(cocktails, vocabulary);
-        double[][] tfidfData = tfidfVectors.toArray(new double[tfidfVectors.size()][]);
+        double[][] tfidfData = tfidfVectors.toArray(new double[0][]);
 
-        // Dodatkowe cechy: liczba składników oraz proporcja składników alkoholowych
+        // Dodatkowe cechy
         double[][] additionalFeatures = new double[cocktails.size()][2];
         for (int i = 0; i < cocktails.size(); i++) {
             Cocktail c = cocktails.get(i);
             int total = c.getIngredients().size();
-            int alcoholCount = 0;
-            for (Ingredient ing : c.getIngredients()) {
-                if (ing.getAlcohol() == 1) {
-                    alcoholCount++;
-                }
-            }
+            int alcoholCount = (int) c.getIngredients().stream().filter(ing -> ing.getAlcohol() == 1).count();
             additionalFeatures[i][0] = total;
             additionalFeatures[i][1] = total > 0 ? (double) alcoholCount / total : 0;
         }
 
-        // Łączymy cechy (konkatenacja wektorów)
-        int tfidfDim = tfidfData[0].length;
-        int addDim = additionalFeatures[0].length;
-        double[][] combinedFeatures = new double[cocktails.size()][tfidfDim + addDim];
-        for (int i = 0; i < cocktails.size(); i++) {
-            System.arraycopy(tfidfData[i], 0, combinedFeatures[i], 0, tfidfDim);
-            System.arraycopy(additionalFeatures[i], 0, combinedFeatures[i], tfidfDim, addDim);
+        // Łączenie cech
+        int d = tfidfData[0].length + additionalFeatures[0].length;
+        String[] colNames = IntStream.range(0, d).mapToObj(i -> "x" + (i + 1)).toArray(String[]::new);
+        DoubleVector[] vectors = new DoubleVector[d];
+        for (int j = 0; j < d; j++) {
+            double[] colData = new double[cocktails.size()];
+            for (int i = 0; i < cocktails.size(); i++) {
+                colData[i] = (j < tfidfData[0].length) ? tfidfData[i][j] : additionalFeatures[i][j - tfidfData[0].length];
+            }
+            vectors[j] = DoubleVector.of(colNames[j], colData);
         }
+        DataFrame df = DataFrame.of(vectors);
 
-        // Standaryzacja – używamy własnej klasy Standardizer
-        Standardizer standardizer = new Standardizer(combinedFeatures);
-        double[][] standardizedData = standardizer.transform(combinedFeatures);
+        // Standaryzacja
+       // InvertibleColumnTransform transform = Standardizer.fit(df);
+       // DataFrame standardizedDf = transform.apply(df);
 
-        // Przeprowadzenie grid searchu po docelowej liczbie wymiarów oraz liczbie klastrów
+        List<Integer> outliers = OutlierRemoval.findOutliers(df.toArray(),2.0);
+        DataFrame cleanedData = DataFrame.of(OutlierRemoval.removeOutliers(df.toArray(), outliers));
+        // Grid Search na PCA i KMeans
         int minDim = 2;
-        // Ustalamy maxDim np. na 10 lub nie więcej niż oryginalna liczba cech
-        int maxDim = Math.min(10, standardizedData[0].length);
+        int maxDim = Math.min(10, cleanedData.ncol());
         int[] kCandidates = {2, 3, 4, 5, 6, 7, 8, 9, 10};
+        OptParams bestParams = GridSearchClustering.gridSearch(cleanedData, minDim, maxDim, kCandidates);
+        System.out.println("Best params: Dimensions = " + bestParams.bestDim + ", k = " + bestParams.bestK + ", Score = " + bestParams.bestScore);
+        //PCA i KMeans z najlepszymi parametrami
+        //PCA pca = PCA.fit(bestParams.bestReducedData);
+        //PCA projection = pca.getProjection(bestParams.bestDim);
+        //DataFrame reducedData = projection.apply(bestParams.bestReducedData);
 
-        OptParams bestParams = GridSearchClustering.gridSearch(standardizedData, minDim, maxDim, kCandidates);
-        System.out.println("Najlepsze parametry: docelowa liczba wymiarów = " + bestParams.bestDim +
-                ", k = " + bestParams.bestK +
-                ", silhouette score = " + bestParams.bestScore);
-
-        // Dla najlepszej konfiguracji wykonujemy PCA i klasteryzację
-        PCA pca = PCA.fit(standardizedData);
-        pca.setProjection(bestParams.bestDim);
-        double[][] reducedData = pca.project(standardizedData);
-
-        // Opcjonalnie usuwamy outliery
-        List<Integer> outliers = OutlierRemoval.findOutliers(reducedData, 2.0);
-        System.out.println("Found outliers: " + outliers.size());
-        double[][] cleanedData = OutlierRemoval.removeOutliers(reducedData, outliers);
-        System.out.println("Data size after removing outliers: " + cleanedData.length);
-
-        KMeans kmeans = KMeans.fit(cleanedData, bestParams.bestK);
+        int k = 3;
+        KMeans kmeans = KMeans.fit(bestParams.bestReducedData.toArray(), k,100,1E-4);
         int[] finalLabels = kmeans.y;
-        double finalSilhouette = Evaluator.computeSilhouetteScore(cleanedData, finalLabels);
+        double finalSilhouette = Evaluator.computeSilhouetteScore(bestParams.bestReducedData.toArray(), finalLabels);
         System.out.println("Final silhouette score: " + finalSilhouette);
 
-        // Wizualizacja wyników (zakładając, że dane mają co najmniej 2 wymiary)
-        Visualization.showClusters(cleanedData, finalLabels);
-    
+        // Wizualizacja
+        Visualization.showClusters(bestParams.bestReducedData.toArray(), finalLabels);
     }
 }
+

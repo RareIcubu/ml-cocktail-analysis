@@ -1,80 +1,85 @@
 package mlcocktail;
 
+import smile.nlp.dictionary.EnglishStopWords;
+import smile.nlp.stemmer.LancasterStemmer;
+import smile.nlp.stemmer.Stemmer;
+import smile.nlp.tokenizer.SimpleTokenizer;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class EnhancedFeatureExtractor {
+    private static final Stemmer STEMMER = new LancasterStemmer();
+    private static final SimpleTokenizer TOKENIZER = new SimpleTokenizer(true);
 
-    /**
-     * Buduje słownik składników, wykluczając te, które występują w więcej niż
-     * threshold (np. 90%) koktajli.
-     */
     public static List<String> buildFilteredIngredientVocabulary(List<Cocktail> cocktails, double threshold) {
         Map<String, Integer> freq = new HashMap<>();
+        
         for (Cocktail cocktail : cocktails) {
-            Set<String> ingrSet = new HashSet<>();
+            Set<String> uniqueIngredients = new HashSet<>();
             for (Ingredient ing : cocktail.getIngredients()) {
                 if (ing.getName() != null) {
-                    ingrSet.add(ing.getName().trim().toLowerCase());
+                    String processed = processIngredientName(ing.getName());
+                    if (!processed.isEmpty()) {
+                        uniqueIngredients.add(processed);
+                    }
                 }
             }
-            for (String name : ingrSet) {
-                freq.put(name, freq.getOrDefault(name, 0) + 1);
-            }
+            uniqueIngredients.forEach(name -> freq.put(name, freq.getOrDefault(name, 0) + 1));
         }
-        int total = cocktails.size();
-        List<String> vocabulary = new ArrayList<>();
-        for (Map.Entry<String, Integer> entry : freq.entrySet()) {
-            if ((double) entry.getValue() / total < threshold) {
-                vocabulary.add(entry.getKey());
-            }
-        }
-        Collections.sort(vocabulary);
-        return vocabulary;
+
+        return freq.entrySet().stream()
+                .filter(entry -> (double) entry.getValue() / cocktails.size() < threshold)
+                .map(Map.Entry::getKey)
+                .sorted()
+                .collect(Collectors.toList());
+    }
+
+    private static String processIngredientName(String name) {
+        return Arrays.stream(TOKENIZER.split(name))
+                .map(String::toLowerCase)
+                .filter(token -> !EnglishStopWords.DEFAULT.contains(token))
+                .map(STEMMER::stem)
+                .collect(Collectors.joining(" "));
     }
 
     /**
-     * Tworzy wektory cech TF-IDF na podstawie słownika składników.
-     * Dla każdego koktajlu:
-     * - TF: przyjmujemy 1 jeśli składnik występuje, 0 jeśli nie.
+     * Tworzy wektory cech TF–IDF:
+     * - TF: dla uproszczenia binarne (1, jeśli termin występuje, 0 w przeciwnym wypadku).
      * - IDF: obliczane jako log(N / (1 + df)).
-     */
+     **/
     public static List<double[]> createTFIDFFeatureVectors(List<Cocktail> cocktails, List<String> vocabulary) {
         int N = cocktails.size();
         int V = vocabulary.size();
         double[] df = new double[V];
-        
-        // Obliczanie df: dla każdego składnika, w ilu koktajlach występuje
+
+        // Obliczanie df: dla każdego terminu, w ilu dokumentach występuje
         for (Cocktail cocktail : cocktails) {
-            Set<String> present = new HashSet<>();
-            for (Ingredient ing : cocktail.getIngredients()) {
-                if (ing.getName() != null) {
-                    String name = ing.getName().trim().toLowerCase();
-                    present.add(name);
-                }
-            }
+            Set<String> present = cocktail.getIngredients().stream()
+                    .map(Ingredient::getName)
+                    .filter(Objects::nonNull)
+                    .map(EnhancedFeatureExtractor::processIngredientName)
+                    .collect(Collectors.toSet());
             for (int i = 0; i < V; i++) {
                 if (present.contains(vocabulary.get(i))) {
                     df[i]++;
                 }
             }
         }
-        
-        // Obliczanie idf
+
         double[] idf = new double[V];
         for (int i = 0; i < V; i++) {
             idf[i] = Math.log((double) N / (1 + df[i]));
         }
-        
-        // Tworzenie wektorów TF-IDF
+
+        // Tworzenie wektorów TF–IDF – przyjmujemy binarne TF
         List<double[]> featureVectors = new ArrayList<>();
         for (Cocktail cocktail : cocktails) {
             double[] vector = new double[V];
-            Set<String> present = new HashSet<>();
-            for (Ingredient ing : cocktail.getIngredients()) {
-                if (ing.getName() != null) {
-                    present.add(ing.getName().trim().toLowerCase());
-                }
-            }
+            Set<String> present = cocktail.getIngredients().stream()
+                    .map(Ingredient::getName)
+                    .filter(Objects::nonNull)
+                    .map(EnhancedFeatureExtractor::processIngredientName)
+                    .collect(Collectors.toSet());
             for (int i = 0; i < V; i++) {
                 double tf = present.contains(vocabulary.get(i)) ? 1.0 : 0.0;
                 vector[i] = tf * idf[i];
@@ -84,4 +89,4 @@ public class EnhancedFeatureExtractor {
         return featureVectors;
     }
 }
-
+         

@@ -1,8 +1,8 @@
 package mlcocktail;
 
 import smile.clustering.KMeans;
-import smile.projection.PCA;
-
+import smile.feature.extraction.PCA;
+import smile.data.DataFrame;
 public class GridSearchClustering {
 
     /**
@@ -19,37 +19,37 @@ public class GridSearchClustering {
   /**
      * Przeszukuje przestrzeń parametrów (docelowy wymiar oraz liczba klastrów) i zwraca konfigurację z najwyższym silhouette score.
      */
-    public static OptParams gridSearch(double[][] data, int minDim, int maxDim, int[] kCandidates) {
-        int originalDim = data[0].length;
+    public static OptParams gridSearch(DataFrame data, int minDim, int maxDim, int[] kCandidates) {
+        int originalDim = data.ncol();
         int effectiveMaxDim = Math.min(maxDim, originalDim);
         double bestScore = -Double.MAX_VALUE;
         int bestDim = minDim;
         int bestK = kCandidates[0];
-        double[][] bestReducedData = null;
+        int[] bestlabels = null;
+        DataFrame bestReducedData = null;
 
         for (int dim = minDim; dim <= effectiveMaxDim; dim++) {
             PCA pca = PCA.fit(data);
-            pca.setProjection(dim);
-            double[][] reducedData = pca.project(data);
-
+            PCA project = pca.getProjection(dim);
+            DataFrame reducedData = project.apply(data);
             for (int k : kCandidates) {
                 try {
-                    KMeans kmeans = KMeans.fit(reducedData, k);
+                    KMeans kmeans = KMeans.fit(reducedData.toArray(), k,100,1E-4);
                     int[] labels = kmeans.y;
-                    double score = Evaluator.computeSilhouetteScore(reducedData, labels);
-                    System.out.println("Dim = " + dim + ", k = " + k + " => Silhouette score: " + score);
+                    double score = Evaluator.computeSilhouetteScore(reducedData.toArray(), labels);
                     if (score > bestScore) {
                         bestScore = score;
                         bestDim = dim;
                         bestK = k;
                         bestReducedData = reducedData;
+                        bestlabels = kmeans.y;
                     }
                 } catch (Exception ex) {
                     System.err.println("Error for dim = " + dim + ", k = " + k + ": " + ex.getMessage());
                 }
             }
         }
-        return new OptParams(bestDim, bestK, bestScore, bestReducedData);
+        return new OptParams(bestDim, bestK, bestScore, bestReducedData );
     }
 }
 
@@ -60,9 +60,9 @@ class OptParams {
     int bestDim;
     int bestK;
     double bestScore;
-    double[][] bestReducedData;
+    DataFrame bestReducedData;
 
-    public OptParams(int bestDim, int bestK, double bestScore, double[][] bestReducedData) {
+    public OptParams(int bestDim, int bestK, double bestScore, DataFrame bestReducedData) {
         this.bestDim = bestDim;
         this.bestK = bestK;
         this.bestScore = bestScore;
