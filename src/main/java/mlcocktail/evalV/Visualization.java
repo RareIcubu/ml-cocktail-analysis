@@ -6,6 +6,12 @@ import org.knowm.xchart.style.markers.SeriesMarkers;
 import java.awt.Color;
 import java.util.*;
 
+/**
+ * <p>Visualization class.</p>
+ *
+ * @author jakub
+ * @version $Id: $Id
+ */
 public class Visualization {
 
     /**

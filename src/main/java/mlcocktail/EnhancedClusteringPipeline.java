@@ -14,8 +14,19 @@ import mlcocktail.data.*;
 import mlcocktail.evalV.Visualization;
 import java.util.*;
 
+/**
+ * <p>EnhancedClusteringPipeline class.</p>
+ *
+ * @author jakub
+ * @version $Id: $Id
+ */
 public class EnhancedClusteringPipeline {
 
+    /**
+     * <p>main.</p>
+     *
+     * @param args an array of {@link java.lang.String} objects
+     */
     public static void main(String[] args) {
         // Ładowanie i przetwarzanie danych
         String filePath = "data/cocktail_dataset.json";

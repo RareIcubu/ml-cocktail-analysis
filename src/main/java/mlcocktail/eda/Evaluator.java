@@ -3,12 +3,25 @@ package mlcocktail.eda;
 import java.util.*;
 import smile.math.distance.EuclideanDistance;
 
+/**
+ * <p>Evaluator class.</p>
+ *
+ * @author jakub
+ * @version $Id: $Id
+ */
 public class Evaluator {
 
     private static final EuclideanDistance DISTANCE = new EuclideanDistance();
 
     /* ---------------------- Podstawowe wskaźniki ewaluacji ---------------------- */
 
+    /**
+     * <p>Evaluate.</p>
+     *
+     * @param data an array of {@link double} objects
+     * @param labels an array of {@link int} objects
+     * @param numClusters a int
+     */
     public static void Evaluate(double[][] data, int[] labels, int numClusters) {
         double silhouette = silhouetteScore(data, labels);
         double daviesBouldin = daviesBouldinIndex(data, labels, numClusters);
@@ -36,6 +49,13 @@ public class Evaluator {
     }
 
     // Silhouette Score (przyjmuje double[][] zamiast List<double[]>)
+    /**
+     * <p>silhouetteScore.</p>
+     *
+     * @param data an array of {@link double} objects
+     * @param labels an array of {@link int} objects
+     * @return a double
+     */
     public static double silhouetteScore(double[][] data, int[] labels) {
         int n = data.length;
         double totalSilhouette = 0.0;
@@ -100,6 +120,14 @@ public class Evaluator {
     }
    
     // Davies-Bouldin Index
+    /**
+     * <p>daviesBouldinIndex.</p>
+     *
+     * @param data an array of {@link double} objects
+     * @param labels an array of {@link int} objects
+     * @param numClusters a int
+     * @return a double
+     */
     public static double daviesBouldinIndex(double[][] data, int[] labels, int numClusters) {
         int dim = data[0].length;
         double[][] centroids = new double[numClusters][dim];
@@ -152,6 +180,14 @@ public class Evaluator {
     }
     
     // Calinski-Harabasz Index
+    /**
+     * <p>calinskiHarabaszIndex.</p>
+     *
+     * @param data an array of {@link double} objects
+     * @param labels an array of {@link int} objects
+     * @param numClusters a int
+     * @return a double
+     */
     public static double calinskiHarabaszIndex(double[][] data, int[] labels, int numClusters) {
         int n = data.length;
         int dim = data[0].length;
@@ -200,6 +236,14 @@ public class Evaluator {
     }
     
     // Dunn Index
+    /**
+     * <p>dunnIndex.</p>
+     *
+     * @param data an array of {@link double} objects
+     * @param labels an array of {@link int} objects
+     * @param numClusters a int
+     * @return a double
+     */
     public static double dunnIndex(double[][] data, int[] labels, int numClusters) {
         double minInterClusterDist = Double.MAX_VALUE;
         double maxIntraClusterDist = 0.0;
@@ -223,6 +267,14 @@ public class Evaluator {
     }
     
     // Gap Statistic (częściowo)
+    /**
+     * <p>gapStatistic.</p>
+     *
+     * @param data an array of {@link double} objects
+     * @param labels an array of {@link int} objects
+     * @param numClusters a int
+     * @return a double
+     */
     public static double gapStatistic(double[][] data, int[] labels, int numClusters) {
         double realDispersion = calculateDispersion(data, labels);
         double referenceDispersion = 0.0;
@@ -286,6 +338,13 @@ public class Evaluator {
     /* ---------------------- Statystyki odległości wewnątrz klastrów ---------------------- */
     
     // Oblicza średnią odległość od punktów do ich centroidów (wewnątrz klastrów)
+    /**
+     * <p>meanIntraClusterDistance.</p>
+     *
+     * @param data an array of {@link double} objects
+     * @param labels an array of {@link int} objects
+     * @return a double
+     */
     public static double meanIntraClusterDistance(double[][] data, int[] labels) {
         double[][] centroids = computeCentroids(data, labels);
         double sum = 0.0;
@@ -296,6 +355,13 @@ public class Evaluator {
     }
     
     // Oblicza medianę odległości od punktów do ich centroidów
+    /**
+     * <p>medianIntraClusterDistance.</p>
+     *
+     * @param data an array of {@link double} objects
+     * @param labels an array of {@link int} objects
+     * @return a double
+     */
     public static double medianIntraClusterDistance(double[][] data, int[] labels) {
         double[][] centroids = computeCentroids(data, labels);
         double[] distances = new double[data.length];
@@ -308,6 +374,13 @@ public class Evaluator {
     }
     
     // Odchylenie standardowe odległości punktów do centroidów
+    /**
+     * <p>stdDevIntraClusterDistance.</p>
+     *
+     * @param data an array of {@link double} objects
+     * @param labels an array of {@link int} objects
+     * @return a double
+     */
     public static double stdDevIntraClusterDistance(double[][] data, int[] labels) {
         double mean = meanIntraClusterDistance(data, labels);
         double[][] centroids = computeCentroids(data, labels);

@@ -10,6 +10,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * <p>GridSearchClustering class.</p>
+ *
+ * @author jakub
+ * @version $Id: $Id
+ */
 public class GridSearchClustering {
 
     private static class CandidateResult {
@@ -32,6 +38,15 @@ public class GridSearchClustering {
         }
     }
 
+    /**
+     * <p>gridSearch.</p>
+     *
+     * @param data a {@link smile.data.DataFrame} object
+     * @param minDim a int
+     * @param maxDim a int
+     * @param kCandidates an array of {@link int} objects
+     * @return a {@link mlcocktail.OptParams} object
+     */
     public static OptParams gridSearch(DataFrame data, int minDim, int maxDim, int[] kCandidates) {
         int originalDim = data.ncol();
         int effectiveMaxDim = Math.min(maxDim, originalDim);
@@ -106,6 +121,14 @@ public class GridSearchClustering {
     private static double normalize(double value, double min, double max, boolean higherIsBetter) {
         if (max == min) {
             return 0.5; // Neutral value when all values are the same
+        /**
+         * <p>Constructor for OptParams.</p>
+         *
+         * @param bestDim a int
+         * @param bestK a int
+         * @param bestScore a double
+         * @param bestReducedData a {@link smile.data.DataFrame} object
+         */
         }
         if (higherIsBetter) {
             return (value - min) / (max - min);

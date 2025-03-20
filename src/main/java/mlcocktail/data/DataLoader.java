@@ -9,7 +9,19 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import mlcocktail.Cocktail;
 
+/**
+ * <p>DataLoader class.</p>
+ *
+ * @author jakub
+ * @version $Id: $Id
+ */
 public class DataLoader{
+    /**
+     * <p>loadCocktails.</p>
+     *
+     * @param filepath a {@link java.lang.String} object
+     * @return a {@link java.util.List} object
+     */
     public static List<Cocktail> loadCocktails(String filepath){
         try(Scanner scan = new Scanner(new File(filepath))){
             scan.useDelimiter("\\A");

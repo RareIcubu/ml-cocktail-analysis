@@ -3,6 +3,12 @@ package mlcocktail.eda;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * <p>OutlierRemoval class.</p>
+ *
+ * @author jakub
+ * @version $Id: $Id
+ */
 public class OutlierRemoval {
 
     /**
@@ -66,6 +72,10 @@ public class OutlierRemoval {
     /**
      * Usuwa z macierzy data wiersze o indeksach podanych w liście outliers.
      * Zwraca nową macierz danych z pominiętymi outlierami.
+     *
+     * @param data an array of {@link double} objects
+     * @param outliers a {@link java.util.List} object
+     * @return an array of {@link double} objects
      */
     public static double[][] removeOutliers(double[][] data, List<Integer> outliers) {
         // Tworzymy zestaw indeksów outlierów, żeby łatwo sprawdzać zawieranie

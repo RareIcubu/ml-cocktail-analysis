@@ -4,9 +4,20 @@ import java.util.List;
 import java.util.stream.Collectors;
 import mlcocktail.Cocktail;
 import mlcocktail.Ingredient;
+/**
+ * <p>DataPreprocessor class.</p>
+ *
+ * @author jakub
+ * @version $Id: $Id
+ */
 public class DataPreprocessor {
 
     // Normalizacja nazw koktajli (np. usunięcie nadmiarowych spacji)
+    /**
+     * <p>normalizeCocktailNames.</p>
+     *
+     * @param cocktails a {@link java.util.List} object
+     */
     public static void normalizeCocktailNames(List<Cocktail> cocktails) {
         for (Cocktail cocktail : cocktails) {
             if (cocktail.getName() != null) {
@@ -15,6 +26,11 @@ public class DataPreprocessor {
         }
     }
 
+    /**
+     * <p>fillMissingIngredientFields.</p>
+     *
+     * @param cocktails a {@link java.util.List} object
+     */
     public static void fillMissingIngredientFields(List<Cocktail> cocktails) {
         for (Cocktail cocktail : cocktails) {
             if (cocktail.getIngredients() != null) {
@@ -49,6 +65,11 @@ public class DataPreprocessor {
         }
     }  
     // Usunięcie duplikatów składników w obrębie pojedynczego koktajlu
+    /**
+     * <p>removeDuplicateIngredients.</p>
+     *
+     * @param cocktails a {@link java.util.List} object
+     */
     public static void removeDuplicateIngredients(List<Cocktail> cocktails) {
         for (Cocktail cocktail : cocktails) {
             if (cocktail.getIngredients() != null) {

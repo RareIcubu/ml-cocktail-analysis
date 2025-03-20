@@ -9,10 +9,23 @@ import java.util.stream.Collectors;
 import mlcocktail.Cocktail;
 import mlcocktail.Ingredient;
 
+/**
+ * <p>EnhancedFeatureExtractor class.</p>
+ *
+ * @author jakub
+ * @version $Id: $Id
+ */
 public class EnhancedFeatureExtractor {
     private static final Stemmer STEMMER = new LancasterStemmer();
     private static final SimpleTokenizer TOKENIZER = new SimpleTokenizer(true);
 
+    /**
+     * <p>buildFilteredIngredientVocabulary.</p>
+     *
+     * @param cocktails a {@link java.util.List} object
+     * @param threshold a double
+     * @return a {@link java.util.List} object
+     */
     public static List<String> buildFilteredIngredientVocabulary(List<Cocktail> cocktails, double threshold) {
         Map<String, Integer> freq = new HashMap<>();
         
@@ -48,7 +61,11 @@ public class EnhancedFeatureExtractor {
      * Tworzy wektory cech TF–IDF:
      * - TF: dla uproszczenia binarne (1, jeśli termin występuje, 0 w przeciwnym wypadku).
      * - IDF: obliczane jako log(N / (1 + df)).
-     **/
+     *
+     * @param cocktails a {@link java.util.List} object
+     * @param vocabulary a {@link java.util.List} object
+     * @return a {@link java.util.List} object
+     */
     public static List<double[]> createTFIDFFeatureVectors(List<Cocktail> cocktails, List<String> vocabulary) {
         int N = cocktails.size();
         int V = vocabulary.size();
