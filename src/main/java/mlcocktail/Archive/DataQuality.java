@@ -1,10 +1,11 @@
-package mlcocktail.eda;
+package mlcocktail.Archive;
 
 import java.util.List;
 import java.util.stream.Collectors;
 import mlcocktail.Cocktail;
 import mlcocktail.Ingredient;
 
+@Deprecated(since="1.5-ALPHA",forRemoval = false)
 public class DataQuality{
     public static void missingIngredients(List<Cocktail> cocktails){
         List<Cocktail> missing = cocktails.stream().filter(coctail -> coctail.getIngredients().isEmpty()).collect(Collectors.toList());

@@ -1,11 +1,11 @@
-package mlcocktail.eda;
+package mlcocktail.Archive;
 
 import mlcocktail.Cocktail;
 import java.util.stream.Collectors;
 import java.util.List;
 import java.util.Map;
 
-
+@Deprecated(since="1.5-ALPHA", forRemoval = false)
 public class DataExplorer{
     public static void printSummary(List<Cocktail> cocktails){
         System.out.println("Number of cocktails: " + cocktails.size());
