@@ -77,10 +77,12 @@ public class EnhancedClusteringPipeline {
 
         int[] finalLabels = kmeans.group();
 //        int[] finalLabels = dbscan.group();
-        double finalSilhouette = Evaluator.computeSilhouetteScore(bestParams.bestReducedData.toArray(), finalLabels);
+        //double finalSilhouette = Evaluator.silhouetteScore(bestParams.bestReducedData.toArray(), finalLabels);
         //double finalSilhouette = Evaluator.computeSilhouetteScore(cleanedData.toArray(), finalLabels);
+        
+        Evaluator.Evaluate(bestParams.bestReducedData.toArray(), finalLabels, bestParams.bestK);
 
-        System.out.println("Final silhouette score: " + finalSilhouette);
+        //System.out.println("Final silhouette score: " + finalSilhouette);
 
         // Wizualizacja
         Visualization.showClusters(bestParams.bestReducedData.toArray(), finalLabels);
