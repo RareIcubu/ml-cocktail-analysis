@@ -8,6 +8,10 @@ import smile.feature.transform.Standardizer;
 //import smile.manifold.UMAP;
 import smile.data.DataFrame;
 import smile.data.transform.InvertibleColumnTransform;
+
+import mlcocktail.eda.*;
+import mlcocktail.data.*;
+import mlcocktail.evalV.Visualization;
 import java.util.*;
 
 public class EnhancedClusteringPipeline {

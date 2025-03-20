@@ -1,8 +1,9 @@
-package mlcocktail;
+package mlcocktail.data;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
+import mlcocktail.Cocktail;
+import mlcocktail.Ingredient;
 public class DataPreprocessor {
 
     // Normalizacja nazw koktajli (np. usunięcie nadmiarowych spacji)

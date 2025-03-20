@@ -1,4 +1,4 @@
-package mlcocktail;
+package mlcocktail.eda;
 
 import smile.nlp.dictionary.EnglishStopWords;
 import smile.nlp.stemmer.LancasterStemmer;
@@ -6,6 +6,8 @@ import smile.nlp.stemmer.Stemmer;
 import smile.nlp.tokenizer.SimpleTokenizer;
 import java.util.*;
 import java.util.stream.Collectors;
+import mlcocktail.Cocktail;
+import mlcocktail.Ingredient;
 
 public class EnhancedFeatureExtractor {
     private static final Stemmer STEMMER = new LancasterStemmer();

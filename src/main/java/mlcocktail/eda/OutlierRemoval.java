@@ -1,4 +1,4 @@
-package mlcocktail;
+package mlcocktail.eda;
 
 import java.util.ArrayList;
 import java.util.List;

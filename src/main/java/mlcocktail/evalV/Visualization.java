@@ -1,4 +1,4 @@
-package mlcocktail;
+package mlcocktail.evalV;
 
 import org.knowm.xchart.*;
 import java.util.*;

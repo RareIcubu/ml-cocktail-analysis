@@ -4,6 +4,7 @@ import smile.clustering.KMeans;
 import smile.clustering.CentroidClustering;
 import smile.feature.extraction.PCA;
 import smile.data.DataFrame;
+import mlcocktail.eda.Evaluator;
 public class GridSearchClustering {
 
     /**
