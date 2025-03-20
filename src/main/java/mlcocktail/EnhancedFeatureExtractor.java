@@ -81,8 +81,14 @@ public class EnhancedFeatureExtractor {
                     .map(EnhancedFeatureExtractor::processIngredientName)
                     .collect(Collectors.toSet());
             for (int i = 0; i < V; i++) {
-                double tf = present.contains(vocabulary.get(i)) ? 1.0 : 0.0;
+                double tf =present.contains(vocabulary.get(i)) ? 1.0 : 0.0;
                 vector[i] = tf * idf[i];
+            }
+            double norm = Math.sqrt(Arrays.stream(vector).map(x -> x * x).sum());
+            if (norm > 0) {
+                for (int i = 0; i < V; i++) {
+                    vector[i] /= norm;
+                }
             }
             featureVectors.add(vector);
         }

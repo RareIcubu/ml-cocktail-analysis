@@ -58,8 +58,5 @@ public class DataPreprocessor {
             }
         }
     }
-
-    // Opcjonalnie: metoda usuwająca lub ignorująca niepotrzebne pola z obiektów Cocktail lub Ingredient.
-    // Możesz np. stworzyć nową reprezentację, która zawiera tylko te pola, które będą użyte w modelu.
 }
 

@@ -1,7 +1,7 @@
 package mlcocktail;
 
 import java.util.*;
-
+import smile.math.distance.EuclideanDistance;
 public class Evaluator {
 
     /**
@@ -16,6 +16,7 @@ public class Evaluator {
         int n = data.length;
         double totalSilhouette = 0.0;
         int count = 0;
+        EuclideanDistance distance = new EuclideanDistance();
 
         // Grupujemy indeksy punktów według etykiety
         Map<Integer, List<Integer>> clusters = new HashMap<>();
@@ -40,7 +41,7 @@ public class Evaluator {
                     continue;
                 }
                 if (i == j) continue;
-                a += euclideanDistance(data[i], data[j]);
+                a += distance.d(data[i], data[j]);
                 intraCount++;
             }
             if (intraCount > 0) {
@@ -61,7 +62,7 @@ public class Evaluator {
                         System.err.println("Warning: skipping invalid index " + j);
                         continue;
                     }
-                    sum += euclideanDistance(data[i], data[j]);
+                    sum += distance.d(data[i], data[j]);
                     interCount++;
                 }
                 if (interCount > 0) {
@@ -80,15 +81,6 @@ public class Evaluator {
         double score = count > 0 ? totalSilhouette / count : 0.0;
         System.out.println("Średni silhouette score obliczony dla " + count + " punktów: " + score);
         return score;
-    }
-
-    private static double euclideanDistance(double[] a, double[] b) {
-        double sum = 0.0;
-        for (int i = 0; i < a.length; i++) {
-            double diff = a[i] - b[i];
-            sum += diff * diff;
-        }
-        return Math.sqrt(sum);
     }
 }
 

@@ -1,6 +1,7 @@
 package mlcocktail;
 
 import smile.clustering.KMeans;
+import smile.clustering.CentroidClustering;
 import smile.feature.extraction.PCA;
 import smile.data.DataFrame;
 public class GridSearchClustering {
@@ -25,7 +26,6 @@ public class GridSearchClustering {
         double bestScore = -Double.MAX_VALUE;
         int bestDim = minDim;
         int bestK = kCandidates[0];
-        int[] bestlabels = null;
         DataFrame bestReducedData = null;
 
         for (int dim = minDim; dim <= effectiveMaxDim; dim++) {
@@ -34,15 +34,15 @@ public class GridSearchClustering {
             DataFrame reducedData = project.apply(data);
             for (int k : kCandidates) {
                 try {
-                    KMeans kmeans = KMeans.fit(reducedData.toArray(), k,100,1E-4);
-                    int[] labels = kmeans.y;
+                    System.out.println("PCA1: "+pca.varianceProportion()[0]*100+ " PCA2: "+ pca.varianceProportion()[1]*100 + " PCA3: " + pca.varianceProportion()[2]*100 + " PCA4: " + pca.varianceProportion()[3]*100 + " PCA5: " + pca.varianceProportion()[4]*100 + " PCA6: " + pca.varianceProportion()[5]*100);
+                    CentroidClustering<double[],double[]> kmeans = KMeans.fit(reducedData.toArray(), k,100);
+                    int[] labels = kmeans.group();
                     double score = Evaluator.computeSilhouetteScore(reducedData.toArray(), labels);
                     if (score > bestScore) {
                         bestScore = score;
                         bestDim = dim;
                         bestK = k;
                         bestReducedData = reducedData;
-                        bestlabels = kmeans.y;
                     }
                 } catch (Exception ex) {
                     System.err.println("Error for dim = " + dim + ", k = " + k + ": " + ex.getMessage());
