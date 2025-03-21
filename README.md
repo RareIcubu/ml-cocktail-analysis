@@ -32,6 +32,9 @@ mvn exec:java -Dexec.mainClass="mlcocktail.MainPipeline"
 mvn exec:java@run
 ```
 
+## 📒 Raport
+[📄 Raport końcowy](./docs/Raport.pdf)
+
 
 ## 📂 Struktura projektu
 ```
