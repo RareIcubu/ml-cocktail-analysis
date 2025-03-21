@@ -97,7 +97,9 @@ public class EnhancedClusteringPipeline {
 
         // Wizualizacja
         Visualization.showClusters(bestParams.bestReducedData.toArray(), finalLabels);
-        // Visualization.showClusters(cleanedData.toArray(), finalLabels);
+        Visualization.showSilhouettePlot(bestParams.bestReducedData.toArray(), finalLabels);
+        Visualization.showCentroidProfiles(bestParams.bestReducedData.toArray(), finalLabels);
+        Visualization.showBoxplot(bestParams.bestReducedData.toArray(), finalLabels, 0, "TF-IDF Feature 0");
     }
 }
 
