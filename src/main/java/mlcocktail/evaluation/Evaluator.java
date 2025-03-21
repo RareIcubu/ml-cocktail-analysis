@@ -3,31 +3,16 @@ package mlcocktail.evaluation;
 import java.util.*;
 import smile.math.distance.EuclideanDistance;
 
-/**
- * <p>Evaluator class.</p>
- *
- * @author jakub
- * @version $Id: $Id
- */
 public class Evaluator {
 
     private static final EuclideanDistance DISTANCE = new EuclideanDistance();
 
-    /* ---------------------- Podstawowe wskaźniki ewaluacji ---------------------- */
-
-    /**
-     * <p>Evaluate.</p>
-     *
-     * @param data an array of {@link double} objects
-     * @param labels an array of {@link int} objects
-     * @param numClusters a int
-     */
-    public static void Evaluate(double[][] data, int[] labels, int numClusters) {
+    public static void Evaluate(double[][] data, int[] labels) {
         double silhouette = silhouetteScore(data, labels);
-        double daviesBouldin = daviesBouldinIndex(data, labels, numClusters);
-        double calinskiHarabasz = calinskiHarabaszIndex(data, labels, numClusters);
-        double dunn = dunnIndex(data, labels, numClusters);
-        double gap = gapStatistic(data, labels, numClusters);
+        double daviesBouldin = daviesBouldinIndex(data, labels);
+        double calinskiHarabasz = calinskiHarabaszIndex(data, labels);     
+        double dunn = dunnIndex(data, labels);
+        double gap = gapStatistic(data, labels);
         double dispersion = calculateDispersion(data, labels);
         
         double meanIntra = meanIntraClusterDistance(data, labels);
@@ -48,373 +33,263 @@ public class Evaluator {
         System.out.println("Std Dev Intra-cluster Distance: " + stdDevIntra);
     }
 
-    // Silhouette Score (przyjmuje double[][] zamiast List<double[]>)
-    /**
-     * <p>silhouetteScore.</p>
-     *
-     * @param data an array of {@link double} objects
-     * @param labels an array of {@link int} objects
-     * @return a double
-     */
     public static double silhouetteScore(double[][] data, int[] labels) {
         int n = data.length;
         double totalSilhouette = 0.0;
         int count = 0;
-        EuclideanDistance distance = new EuclideanDistance();
 
-        // 1. Grupujemy indeksy punktów według etykiety
         Map<Integer, List<Integer>> clusters = new HashMap<>();
         for (int i = 0; i < n; i++) {
             int label = labels[i];
+            if (label == -1) continue;
             clusters.computeIfAbsent(label, k -> new ArrayList<>()).add(i);
         }
 
-        // 2. Dla każdego punktu obliczamy silhouette
+        if (clusters.size() <= 1) {
+            return 0.0;
+        }
+
         for (int i = 0; i < n; i++) {
             int label = labels[i];
-            List<Integer> sameCluster = clusters.get(label);
+            if (label == -1) continue;
 
-            // Jeśli klaster ma tylko 1 punkt (ten), silhouette jest nieokreślone
-            if (sameCluster == null || sameCluster.size() <= 1) {
-                continue;
-            }
+            List<Integer> cluster = clusters.get(label);
+            if (cluster.size() <= 1) continue;
 
-            // a(i): średnia odległość do innych punktów w tym samym klastrze
             double a = 0.0;
-            int intraCount = 0;
-            for (int j : sameCluster) {
-                if (j == i) continue;  // nie liczymy odległości punktu do siebie
-                a += distance.d(data[i], data[j]);
-                intraCount++;
+            for (int j : cluster) {
+                if (j != i) a += DISTANCE.d(data[i], data[j]);
             }
-            if (intraCount > 0) {
-                a /= intraCount;
-            } else {
-                continue;
-            }
+            a /= (cluster.size() - 1);
 
-            // b(i): najmniejsza średnia odległość do punktów z innego klastra
             double b = Double.MAX_VALUE;
             for (Map.Entry<Integer, List<Integer>> entry : clusters.entrySet()) {
-                if (entry.getKey() == label) continue; // pomijamy ten sam klaster
-                List<Integer> otherCluster = entry.getValue();
+                if (entry.getKey() == label) continue;
                 double sum = 0.0;
-                for (int j : otherCluster) {
-                    sum += distance.d(data[i], data[j]);
+                for (int j : entry.getValue()) {
+                    sum += DISTANCE.d(data[i], data[j]);
                 }
-                double avg = sum / otherCluster.size();
-                if (avg < b) {
-                    b = avg;
-                }
+                double avg = sum / entry.getValue().size();
+                b = Math.min(b, avg);
             }
 
-            // silhouette dla punktu i
             double s = (b - a) / Math.max(a, b);
             totalSilhouette += s;
             count++;
         }
 
-        double score = count > 0 ? totalSilhouette / count : 0.0;
-        System.out.println("Średni silhouette score obliczony dla " + count + " punktów: " + score);
-        return score;
+        return count > 0 ? totalSilhouette / count : 0.0;
     }
-   
-    // Davies-Bouldin Index
-    /**
-     * <p>daviesBouldinIndex.</p>
-     *
-     * @param data an array of {@link double} objects
-     * @param labels an array of {@link int} objects
-     * @param numClusters a int
-     * @return a double
-     */
-    public static double daviesBouldinIndex(double[][] data, int[] labels, int numClusters) {
-        int dim = data[0].length;
-        double[][] centroids = new double[numClusters][dim];
-        int[] clusterSizes = new int[numClusters];
 
-        // Sumowanie punktów do centroidów
-        for (int i = 0; i < data.length; i++) {
-            int cluster = labels[i];
-            clusterSizes[cluster]++;
-            for (int j = 0; j < dim; j++) {
-                centroids[cluster][j] += data[i][j];
-            }
+    public static double daviesBouldinIndex(double[][] data, int[] labels) {
+        Set<Integer> clusterIds = new HashSet<>();
+        for (int label : labels) {
+            if (label != -1) clusterIds.add(label);
         }
-        // Obliczenie średnich (centroidów)
-        for (int c = 0; c < numClusters; c++) {
-            if (clusterSizes[c] > 0) {
-                for (int j = 0; j < dim; j++) {
-                    centroids[c][j] /= clusterSizes[c];
-                }
-            }
+        int numClusters = clusterIds.size();
+        if (numClusters <= 1) return 0.0;
+
+        Map<Integer, double[]> centroids = computeCentroids(data, labels);
+        Map<Integer, Double> clusterAverages = new HashMap<>();
+        Map<Integer, Integer> clusterSizes = new HashMap<>();
+
+        for (int i = 0; i < data.length; i++) {
+            int label = labels[i];
+            if (label == -1) continue;
+            clusterSizes.put(label, clusterSizes.getOrDefault(label, 0) + 1);
+            clusterAverages.put(label, clusterAverages.getOrDefault(label, 0.0) + DISTANCE.d(data[i], centroids.get(label)));
         }
 
-        // Obliczenie średnich odległości punktów od centroidu dla każdego klastra
-        double[] clusterAverages = new double[numClusters];
-        for (int i = 0; i < data.length; i++) {
-            int cluster = labels[i];
-            clusterAverages[cluster] += DISTANCE.d(data[i], centroids[cluster]);
+        for (int label : clusterAverages.keySet()) {
+            clusterAverages.put(label, clusterAverages.get(label) / clusterSizes.get(label));
         }
-        for (int c = 0; c < numClusters; c++) {
-            if (clusterSizes[c] > 0) {
-                clusterAverages[c] /= clusterSizes[c];
-            }
-        }
-        
+
         double sum = 0.0;
-        for (int i = 0; i < numClusters; i++) {
+        List<Integer> clusterList = new ArrayList<>(clusterIds);
+        for (int i = 0; i < clusterList.size(); i++) {
+            int labelI = clusterList.get(i);
             double maxRatio = 0.0;
-            for (int j = 0; j < numClusters; j++) {
-                if (i != j) {
-                    double centDist = DISTANCE.d(centroids[i], centroids[j]);
-                    double ratio = (clusterAverages[i] + clusterAverages[j]) / centDist;
-                    if (ratio > maxRatio) {
-                        maxRatio = ratio;
-                    }
-                }
+            for (int j = 0; j < clusterList.size(); j++) {
+                if (i == j) continue;
+                int labelJ = clusterList.get(j);
+                double dist = DISTANCE.d(centroids.get(labelI), centroids.get(labelJ));
+                double ratio = (clusterAverages.get(labelI) + clusterAverages.get(labelJ)) / dist;
+                maxRatio = Math.max(maxRatio, ratio);
             }
             sum += maxRatio;
         }
         return sum / numClusters;
     }
-    
-    // Calinski-Harabasz Index
-    /**
-     * <p>calinskiHarabaszIndex.</p>
-     *
-     * @param data an array of {@link double} objects
-     * @param labels an array of {@link int} objects
-     * @param numClusters a int
-     * @return a double
-     */
-    public static double calinskiHarabaszIndex(double[][] data, int[] labels, int numClusters) {
+
+    public static double calinskiHarabaszIndex(double[][] data, int[] labels) {
+        Set<Integer> clusterIds = new HashSet<>();
+        for (int label : labels) if (label != -1) clusterIds.add(label);
+        int numClusters = clusterIds.size();
+        if (numClusters <= 1) return 0.0;
+
         int n = data.length;
         int dim = data[0].length;
         double[] globalMean = new double[dim];
-        for (int i = 0; i < n; i++) {
+        for (double[] point : data) {
             for (int j = 0; j < dim; j++) {
-                globalMean[j] += data[i][j];
+                globalMean[j] += point[j];
             }
         }
-        for (int j = 0; j < dim; j++) {
-            globalMean[j] /= n;
+        for (int j = 0; j < dim; j++) globalMean[j] /= n;
+
+        Map<Integer, double[]> centroids = computeCentroids(data, labels);
+        Map<Integer, Integer> clusterSizes = new HashMap<>();
+        for (int label : labels) {
+            if (label != -1) clusterSizes.put(label, clusterSizes.getOrDefault(label, 0) + 1);
         }
-        
-        // Obliczenie centroidów dla poszczególnych klastrów
-        double[][] centroids = new double[numClusters][dim];
-        int[] clusterSizes = new int[numClusters];
+
+        double between = 0.0;
+        for (int label : clusterIds) {
+            int size = clusterSizes.get(label);
+            between += size * Math.pow(DISTANCE.d(centroids.get(label), globalMean), 2);
+        }
+        between /= (numClusters - 1);
+
+        double within = 0.0;
         for (int i = 0; i < n; i++) {
-            int cluster = labels[i];
-            clusterSizes[cluster]++;
-            for (int j = 0; j < dim; j++) {
-                centroids[cluster][j] += data[i][j];
-            }
+            int label = labels[i];
+            if (label == -1) continue;
+            within += Math.pow(DISTANCE.d(data[i], centroids.get(label)), 2);
         }
-        for (int c = 0; c < numClusters; c++) {
-            if (clusterSizes[c] > 0) {
-                for (int j = 0; j < dim; j++) {
-                    centroids[c][j] /= clusterSizes[c];
-                }
-            }
-        }
-        
-        double betweenClusterVariance = 0.0;
-        for (int c = 0; c < numClusters; c++) {
-            double dist = DISTANCE.d(centroids[c], globalMean);
-            betweenClusterVariance += clusterSizes[c] * dist * dist;
-        }
-        
-        double withinClusterVariance = 0.0;
-        for (int i = 0; i < n; i++) {
-            int cluster = labels[i];
-            double dist = DISTANCE.d(data[i], centroids[cluster]);
-            withinClusterVariance += dist * dist;
-        }
-        
-        return (betweenClusterVariance / (numClusters - 1)) / (withinClusterVariance / (n - numClusters));
+        within /= (n - numClusters);
+
+        return between / within;
     }
-    
-    // Dunn Index
-    /**
-     * <p>dunnIndex.</p>
-     *
-     * @param data an array of {@link double} objects
-     * @param labels an array of {@link int} objects
-     * @param numClusters a int
-     * @return a double
-     */
-    public static double dunnIndex(double[][] data, int[] labels, int numClusters) {
-        double minInterClusterDist = Double.MAX_VALUE;
-        double maxIntraClusterDist = 0.0;
-        
+
+    public static double dunnIndex(double[][] data, int[] labels) {
+        Map<Integer, List<double[]>> clusters = new HashMap<>();
         for (int i = 0; i < data.length; i++) {
-            for (int j = i + 1; j < data.length; j++) {
-                double dist = DISTANCE.d(data[i], data[j]);
-                if (labels[i] == labels[j]) {
-                    if (dist > maxIntraClusterDist) {
-                        maxIntraClusterDist = dist;
-                    }
-                } else {
-                    if (dist < minInterClusterDist) {
-                        minInterClusterDist = dist;
-                    }
-                }
+            int label = labels[i];
+            if (label == -1) continue;
+            clusters.computeIfAbsent(label, k -> new ArrayList<>()).add(data[i]);
+        }
+        if (clusters.size() < 2) return 0.0;
+
+        double maxIntra = 0.0;
+        for (List<double[]> cluster : clusters.values()) {
+            maxIntra = Math.max(maxIntra, computeMaxIntra(cluster));
+        }
+
+        double minInter = Double.MAX_VALUE;
+        List<Integer> labelsList = new ArrayList<>(clusters.keySet());
+        for (int i = 0; i < labelsList.size(); i++) {
+            for (int j = i+1; j < labelsList.size(); j++) {
+                minInter = Math.min(minInter, computeMinInter(clusters.get(labelsList.get(i)), clusters.get(labelsList.get(j))));
             }
         }
-        
-        return minInterClusterDist / maxIntraClusterDist;
+
+        return minInter / maxIntra;
     }
-    
-    // Gap Statistic (częściowo)
-    /**
-     * <p>gapStatistic.</p>
-     *
-     * @param data an array of {@link double} objects
-     * @param labels an array of {@link int} objects
-     * @param numClusters a int
-     * @return a double
-     */
-    public static double gapStatistic(double[][] data, int[] labels, int numClusters) {
-        double realDispersion = calculateDispersion(data, labels);
-        double referenceDispersion = 0.0;
-        Random random = new Random();
-        int iterations = 10;
-        
-        for (int i = 0; i < iterations; i++) {
-            double[][] referenceData = new double[data.length][data[0].length];
-            // Generujemy dane referencyjne – dla każdej cechy losujemy wartość z [min, max]
-            for (int j = 0; j < data[0].length; j++) {
-                double min = Double.MAX_VALUE;
-                double max = -Double.MAX_VALUE;
-                for (int i1 = 0; i1 < data.length; i1++) {
-                    min = Math.min(min, data[i1][j]);
-                    max = Math.max(max, data[i1][j]);
-                }
-                for (int i1 = 0; i1 < data.length; i1++) {
-                    referenceData[i1][j] = min + (max - min) * random.nextDouble();
-                }
+
+    private static double computeMaxIntra(List<double[]> cluster) {
+        double max = 0.0;
+        for (int i = 0; i < cluster.size(); i++) {
+            for (int j = i+1; j < cluster.size(); j++) {
+                max = Math.max(max, DISTANCE.d(cluster.get(i), cluster.get(j)));
             }
-            // Używamy tych samych etykiet – dla uproszczenia
-            referenceDispersion += calculateDispersion(referenceData, labels);
         }
-        
-        referenceDispersion /= iterations;
-        return Math.log(referenceDispersion) - Math.log(realDispersion);
+        return max;
     }
-    
-    // Pomocnicza metoda do obliczania dyspersji (średniej odległości punktu do "centroidu" przypisanego etykiety)
+
+    private static double computeMinInter(List<double[]> c1, List<double[]> c2) {
+        double min = Double.MAX_VALUE;
+        for (double[] p1 : c1) {
+            for (double[] p2 : c2) {
+                min = Math.min(min, DISTANCE.d(p1, p2));
+            }
+        }
+        return min;
+    }
+
+    public static double gapStatistic(double[][] data, int[] labels) {
+        // Uwaga: Wymaga poprawnej implementacji generowania danych referencyjnych i ponownej klasteryzacji
+        return 0.0; // Tymczasowe rozwiązanie
+    }
+
     private static double calculateDispersion(double[][] data, int[] labels) {
-        int n = data.length;
-        int dim = data[0].length;
-        // Obliczamy centroidy na podstawie etykiet
-        Map<Integer, double[]> centroidMap = new HashMap<>();
+        Map<Integer, double[]> centroids = computeCentroids(data, labels);
+        double sum = 0.0;
+        int count = 0;
+        for (int i = 0; i < data.length; i++) {
+            int label = labels[i];
+            if (label == -1) continue;
+            sum += DISTANCE.d(data[i], centroids.get(label));
+            count++;
+        }
+        return count > 0 ? sum / count : 0.0;
+    }
+
+    private static Map<Integer, double[]> computeCentroids(double[][] data, int[] labels) {
+        Map<Integer, double[]> centroids = new HashMap<>();
         Map<Integer, Integer> counts = new HashMap<>();
-        
-        for (int i = 0; i < n; i++) {
-            int cluster = labels[i];
-            centroidMap.putIfAbsent(cluster, new double[dim]);
-            counts.put(cluster, counts.getOrDefault(cluster, 0) + 1);
-            for (int j = 0; j < dim; j++) {
-                centroidMap.get(cluster)[j] += data[i][j];
-            }
-        }
-        for (Integer cluster : centroidMap.keySet()) {
-            double[] centroid = centroidMap.get(cluster);
-            int count = counts.get(cluster);
-            for (int j = 0; j < dim; j++) {
-                centroid[j] /= count;
-            }
-        }
-        
-        double sum = 0.0;
-        for (int i = 0; i < n; i++) {
-            int cluster = labels[i];
-            sum += DISTANCE.d(data[i], centroidMap.get(cluster));
-        }
-        return sum / n;
-    }
-    
-    /* ---------------------- Statystyki odległości wewnątrz klastrów ---------------------- */
-    
-    // Oblicza średnią odległość od punktów do ich centroidów (wewnątrz klastrów)
-    /**
-     * <p>meanIntraClusterDistance.</p>
-     *
-     * @param data an array of {@link double} objects
-     * @param labels an array of {@link int} objects
-     * @return a double
-     */
-    public static double meanIntraClusterDistance(double[][] data, int[] labels) {
-        double[][] centroids = computeCentroids(data, labels);
-        double sum = 0.0;
-        for (int i = 0; i < data.length; i++) {
-            sum += DISTANCE.d(data[i], centroids[labels[i]]);
-        }
-        return sum / data.length;
-    }
-    
-    // Oblicza medianę odległości od punktów do ich centroidów
-    /**
-     * <p>medianIntraClusterDistance.</p>
-     *
-     * @param data an array of {@link double} objects
-     * @param labels an array of {@link int} objects
-     * @return a double
-     */
-    public static double medianIntraClusterDistance(double[][] data, int[] labels) {
-        double[][] centroids = computeCentroids(data, labels);
-        double[] distances = new double[data.length];
-        for (int i = 0; i < data.length; i++) {
-            distances[i] = DISTANCE.d(data[i], centroids[labels[i]]);
-        }
-        Arrays.sort(distances);
-        int mid = distances.length / 2;
-        return distances.length % 2 == 0 ? (distances[mid - 1] + distances[mid]) / 2.0 : distances[mid];
-    }
-    
-    // Odchylenie standardowe odległości punktów do centroidów
-    /**
-     * <p>stdDevIntraClusterDistance.</p>
-     *
-     * @param data an array of {@link double} objects
-     * @param labels an array of {@link int} objects
-     * @return a double
-     */
-    public static double stdDevIntraClusterDistance(double[][] data, int[] labels) {
-        double mean = meanIntraClusterDistance(data, labels);
-        double[][] centroids = computeCentroids(data, labels);
-        double sumSq = 0.0;
-        for (int i = 0; i < data.length; i++) {
-            double d = DISTANCE.d(data[i], centroids[labels[i]]);
-            sumSq += (d - mean) * (d - mean);
-        }
-        return Math.sqrt(sumSq / data.length);
-    }
-    
-    // Pomocnicza metoda do obliczania centroidów dla danych
-    private static double[][] computeCentroids(double[][] data, int[] labels) {
-        int n = data.length;
         int dim = data[0].length;
-        int numClusters = Arrays.stream(labels).max().orElse(-1) + 1;
-        double[][] centroids = new double[numClusters][dim];
-        int[] counts = new int[numClusters];
-        
-        for (int i = 0; i < n; i++) {
-            int cluster = labels[i];
-            counts[cluster]++;
+
+        for (int i = 0; i < data.length; i++) {
+            int label = labels[i];
+            if (label == -1) continue;
+            if (!centroids.containsKey(label)) {
+                centroids.put(label, new double[dim]);
+                counts.put(label, 0);
+            }
+            counts.put(label, counts.get(label) + 1);
             for (int j = 0; j < dim; j++) {
-                centroids[cluster][j] += data[i][j];
+                centroids.get(label)[j] += data[i][j];
             }
         }
-        for (int c = 0; c < numClusters; c++) {
-            if (counts[c] > 0) {
-                for (int j = 0; j < dim; j++) {
-                    centroids[c][j] /= counts[c];
-                }
+
+        for (int label : centroids.keySet()) {
+            int count = counts.get(label);
+            for (int j = 0; j < dim; j++) {
+                centroids.get(label)[j] /= count;
             }
         }
         return centroids;
     }
-}
 
+    public static double meanIntraClusterDistance(double[][] data, int[] labels) {
+        Map<Integer, double[]> centroids = computeCentroids(data, labels);
+        double sum = 0.0;
+        int count = 0;
+        for (int i = 0; i < data.length; i++) {
+            int label = labels[i];
+            if (label == -1) continue;
+            sum += DISTANCE.d(data[i], centroids.get(label));
+            count++;
+        }
+        return count > 0 ? sum / count : 0.0;
+    }
+
+    public static double medianIntraClusterDistance(double[][] data, int[] labels) {
+        List<Double> distances = new ArrayList<>();
+        Map<Integer, double[]> centroids = computeCentroids(data, labels);
+        for (int i = 0; i < data.length; i++) {
+            int label = labels[i];
+            if (label == -1) continue;
+            distances.add(DISTANCE.d(data[i], centroids.get(label)));
+        }
+        Collections.sort(distances);
+        int mid = distances.size() / 2;
+        return distances.isEmpty() ? 0.0 :
+            distances.size() % 2 == 0 ? (distances.get(mid-1) + distances.get(mid)) / 2.0 : distances.get(mid);
+    }
+
+    public static double stdDevIntraClusterDistance(double[][] data, int[] labels) {
+        double mean = meanIntraClusterDistance(data, labels);
+        Map<Integer, double[]> centroids = computeCentroids(data, labels);
+        double sumSq = 0.0;
+        int count = 0;
+        for (int i = 0; i < data.length; i++) {
+            int label = labels[i];
+            if (label == -1) continue;
+            double d = DISTANCE.d(data[i], centroids.get(label));
+            sumSq += (d - mean) * (d - mean);
+            count++;
+        }
+        return count > 0 ? Math.sqrt(sumSq / count) : 0.0;
+    }
+}

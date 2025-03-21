@@ -95,7 +95,7 @@ public class MainPipeline {
         System.out.println("Klasteryzacja (" + clusterer.getAlgorithmName() + ") zakończona.");
 
         // 9. Ewaluacja
-        Evaluator.Evaluate(reducedData, result.getLabels(), bestParams.getBestK());
+        Evaluator.Evaluate(reducedData, result.getLabels());
 
         // 10. Wizualizacja
         Visualization.showClusters(reducedData, result.getLabels());

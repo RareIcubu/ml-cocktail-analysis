@@ -62,9 +62,9 @@ public class GridSearchClustering {
                     int[] labels = kmeans.group();
 
                     double silhouette = Evaluator.silhouetteScore(reducedData.toArray(), labels);
-                    double daviesBouldin = Evaluator.daviesBouldinIndex(reducedData.toArray(), labels, k);
-                    double calinskiHarabasz = Evaluator.calinskiHarabaszIndex(reducedData.toArray(), labels, k);
-                    double dunn = Evaluator.dunnIndex(reducedData.toArray(), labels, k);
+                    double daviesBouldin = Evaluator.daviesBouldinIndex(reducedData.toArray(), labels);
+                    double calinskiHarabasz = Evaluator.calinskiHarabaszIndex(reducedData.toArray(), labels);
+                    double dunn = Evaluator.dunnIndex(reducedData.toArray(), labels);
 
                     candidates.add(new CandidateResult(dim, k, reducedData, silhouette, daviesBouldin, calinskiHarabasz, dunn));
                 } catch (Exception ex) {
