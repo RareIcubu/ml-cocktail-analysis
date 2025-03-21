@@ -1,4 +1,3 @@
-```markdown
 # Cocktail Clustering Analysis :cocktail:
 
 Machine learning pipeline for exploratory data analysis (EDA) and clustering of cocktail recipes from TheCocktailDB.  
