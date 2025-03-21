@@ -1,6 +1,6 @@
 # Cocktail Clustering Analysis :cocktail:
 
-Machine learning pipeline for exploratory data analysis (EDA) and clustering of cocktail recipes from TheCocktailDB.  
+Analiza exploratory data analysis (EDA) na bazie danych TheCocktailDB.  
 **Java 17 | Maven | Smile Machine Learning**
 
 [![Java Version](https://img.shields.io/badge/Java-17-007396?logo=openjdk)](https://adoptium.net/)
@@ -21,7 +21,7 @@ cd cocktail-clustering
 mvn clean install
 ```
 
-## 🏃♂️ How to Run
+## 🏃♂️ Jak uruchomić?
 
 Uruchamianie projektu za pomocą Maven:
 ```bash
@@ -82,6 +82,7 @@ mvn exec:java@run
 ```
 
 ## ⚙️ Konfiguracja
+Zmianę konfiguracji dokonuje się bezpośrednio w [MainPipeline.java](./src/main/java/mlcocktail/MainPipeline.java)
 | Komponent          | Opcje                          |
 |--------------------|----------------------------------|
 | **Clustering**     | K-Means, DBSCAN, X-Means         |
@@ -91,11 +92,10 @@ mvn exec:java@run
 ## 📊 Wizualizacja wyników
 
 ```
-
 Zawiera:
 - 2D wykresy klastrów
 - Silhouette diagrams
-
+```
 ## 📦 Biblioteki
 Wszystkie zależności są dostępne w pliku [pom.xml](./pom.xml):
 ```xml
@@ -106,13 +106,12 @@ Wszystkie zależności są dostępne w pliku [pom.xml](./pom.xml):
     <version>3.0.1</version>
   </dependency>
   <dependency>
-    <groupId>com.googlecode.json-simple</groupId>
-    <artifactId>json-simple</artifactId>
-    <version>1.1.1</version>
-  </dependency>
+    <groupId>com.google.code.gson</groupId>
+    <artifactId>gson</artifactId>
+    <version>2.8.9</version>
+</dependency>
 </dependencies>
 ```
 
 📬 **Kontakt**: [Jakub Jasiński](mailto:280109@student.pwr.edu.pl)  
-🔖 **Licencja**: GPL 3.0 license (see [LICENSE](LICENSE))
-``` 
+🔖 **Licencja**: GPL 3.0 license (patrz [LICENSE](LICENSE)) 
