@@ -1,17 +1,17 @@
-package mlcocktail;
+package mlcocktail.clustering;
 
 import smile.clustering.KMeans;
 import smile.clustering.CentroidClustering;
 import smile.feature.extraction.PCA;
 import smile.data.DataFrame;
-import mlcocktail.eda.Evaluator;
+import mlcocktail.evaluation.Evaluator;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 /**
- * <p>GridSearchClustering class.</p>
+ * Klasa realizująca grid search dla klasteryzacji z wyborem najlepszych parametrów.
  *
  * @author jakub
  * @version $Id: $Id
@@ -39,13 +39,13 @@ public class GridSearchClustering {
     }
 
     /**
-     * <p>gridSearch.</p>
+     * Wykonuje grid search dla redukcji wymiarów i klasteryzacji.
      *
-     * @param data a {@link smile.data.DataFrame} object
-     * @param minDim a int
-     * @param maxDim a int
-     * @param kCandidates an array of {@link int} objects
-     * @return a {@link mlcocktail.OptParams} object
+     * @param data a DataFrame z danymi
+     * @param minDim minimalna liczba wymiarów
+     * @param maxDim maksymalna liczba wymiarów
+     * @param kCandidates tablica możliwych wartości k
+     * @return OptParams zawierające optymalne parametry
      */
     public static OptParams gridSearch(DataFrame data, int minDim, int maxDim, int[] kCandidates) {
         int originalDim = data.ncol();
@@ -54,8 +54,8 @@ public class GridSearchClustering {
 
         for (int dim = minDim; dim <= effectiveMaxDim; dim++) {
             PCA pca = PCA.fit(data);
-            PCA project = pca.getProjection(dim);
-            DataFrame reducedData = project.apply(data);
+            PCA projection = pca.getProjection(dim);
+            DataFrame reducedData = projection.apply(data);
             for (int k : kCandidates) {
                 try {
                     CentroidClustering<double[], double[]> kmeans = KMeans.fit(reducedData.toArray(), k, 100);
@@ -120,15 +120,7 @@ public class GridSearchClustering {
 
     private static double normalize(double value, double min, double max, boolean higherIsBetter) {
         if (max == min) {
-            return 0.5; // Neutral value when all values are the same
-        /**
-         * <p>Constructor for OptParams.</p>
-         *
-         * @param bestDim a int
-         * @param bestK a int
-         * @param bestScore a double
-         * @param bestReducedData a {@link smile.data.DataFrame} object
-         */
+            return 0.5; // Wartość neutralna, gdy wszystkie wartości są równe
         }
         if (higherIsBetter) {
             return (value - min) / (max - min);
@@ -138,16 +130,3 @@ public class GridSearchClustering {
     }
 }
 
-class OptParams {
-    int bestDim;
-    int bestK;
-    double bestScore;
-    DataFrame bestReducedData;
-
-    public OptParams(int bestDim, int bestK, double bestScore, DataFrame bestReducedData) {
-        this.bestDim = bestDim;
-        this.bestK = bestK;
-        this.bestScore = bestScore;
-        this.bestReducedData = bestReducedData;
-    }
-}

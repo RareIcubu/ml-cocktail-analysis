@@ -1,4 +1,4 @@
-package mlcocktail.evalV;
+package mlcocktail.evaluation;
 
 import org.knowm.xchart.*;
 import org.knowm.xchart.style.markers.SeriesMarkers;
@@ -7,6 +7,12 @@ import smile.math.distance.EuclideanDistance;
 import java.awt.Color;
 import java.util.*;
 
+/**
+ * <p>Visualization class.</p>
+ *
+ * @author jakub
+ * @version $Id: $Id
+ */
 public class Visualization {
 
     /**
@@ -265,6 +271,14 @@ public class Visualization {
         return silhouetteMap;
     }
 
+		/**
+		 * <p>showBoxplot.</p>
+		 *
+		 * @param data an array of {@link double} objects
+		 * @param labels an array of {@link int} objects
+		 * @param featureIndex a int
+		 * @param featureName a {@link java.lang.String} object
+		 */
 		public static void showBoxplot(double[][] data, int[] labels, int featureIndex, String featureName) {
     // Grupujemy wartości danej cechy dla każdego klastra
     Map<Integer, List<Double>> clusterValues = new HashMap<>();

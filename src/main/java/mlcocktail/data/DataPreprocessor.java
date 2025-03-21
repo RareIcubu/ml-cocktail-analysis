@@ -2,8 +2,6 @@ package mlcocktail.data;
 
 import java.util.List;
 import java.util.stream.Collectors;
-import mlcocktail.Cocktail;
-import mlcocktail.Ingredient;
 /**
  * <p>DataPreprocessor class.</p>
  *

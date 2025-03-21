@@ -7,7 +7,6 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.io.File;
 import java.io.FileNotFoundException;
-import mlcocktail.Cocktail;
 
 /**
  * <p>DataLoader class.</p>

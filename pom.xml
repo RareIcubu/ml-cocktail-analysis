@@ -1,4 +1,3 @@
-
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
@@ -7,7 +6,7 @@
 
     <groupId>com.example</groupId>
     <artifactId>ml-cocktail-analysis</artifactId>
-    <version>1.5-ALPHA</version>
+    <version>1.0</version>
 
     <dependencies>
         <!-- Parsowanie JSON -->
@@ -23,7 +22,6 @@
             <artifactId>slf4j-simple</artifactId>
             <version>1.7.36</version>
         </dependency>
-
 
         <dependency>
             <groupId>org.bytedeco</groupId>
@@ -60,29 +58,77 @@
 
     <build>
         <plugins>
+            <!-- Ustawienie wersji Javy -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>17</source>
+                    <target>17</target>
+                </configuration>
+            </plugin>
+
+            <!-- Wtyczka do uruchamiania aplikacji -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.0.0</version>
                 <configuration>
-                    <mainClass>mlcocktail.EnhancedClusteringPipeline</mainClass>
+                    <mainClass>mlcocktail.MainPipeline</mainClass>
                 </configuration>
             </plugin>
+
+            <!-- Tworzenie JAR-a z manifestem -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-           	    <artifactId>maven-javadoc-plugin</artifactId>
-           	    <version>3.6.0</version> 
-           	    <executions>
-           	        <execution>
-           	            <phase>package</phase> 
-           	            <goals>
-           	                <goal>javadoc</goal> 
-           	                <goal>jar</goal>    
-           	            </goals>
-           	        </execution>
-           	    </executions>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.2.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>mlcocktail.MainPipeline</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
             </plugin>
-        </plugins>
+
+            <!-- Generowanie dokumentacji -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.6.0</version> 
+                <executions>
+                    <execution>
+                        <phase>package</phase> 
+                        <goals>
+                            <goal>javadoc</goal> 
+                            <goal>jar</goal>    
+                        </goals>
+                    </execution>
+                </executions>
+                </plugin>
+                <plugin>
+				   <groupId>org.apache.maven.plugins</groupId>
+				   <artifactId>maven-shade-plugin</artifactId>
+				   <version>3.3.0</version>
+				   <executions>
+				       <execution>
+				           <phase>package</phase>
+				           <goals>
+				               <goal>shade</goal>
+				           </goals>
+				           <configuration>
+				               <transformers>
+				                   <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+				                       <mainClass>mlcocktail.MainPipeline</mainClass>
+				                   </transformer>
+				               </transformers>
+				           </configuration>
+				       </execution>
+				   </executions>
+                </plugin>
+			</plugins>
     </build>
 
 </project>

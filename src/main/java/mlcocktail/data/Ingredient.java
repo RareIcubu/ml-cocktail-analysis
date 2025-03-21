@@ -1,4 +1,4 @@
-package mlcocktail;
+package mlcocktail.data;
 import java.util.Objects;
 
 /**

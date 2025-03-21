@@ -1,16 +1,18 @@
-package mlcocktail.eda;
+package mlcocktail.features;
 
+import mlcocktail.data.Cocktail;
+import mlcocktail.data.Ingredient;
 import smile.nlp.dictionary.EnglishStopWords;
 import smile.nlp.stemmer.LancasterStemmer;
 import smile.nlp.stemmer.Stemmer;
 import smile.nlp.tokenizer.SimpleTokenizer;
+
 import java.util.*;
 import java.util.stream.Collectors;
-import mlcocktail.Cocktail;
-import mlcocktail.Ingredient;
+import java.util.stream.Stream;
 
 /**
- * <p>EnhancedFeatureExtractor class.</p>
+ * Klasa do ekstrakcji i przetwarzania cech z listy koktajli.
  *
  * @author jakub
  * @version $Id: $Id
@@ -20,15 +22,15 @@ public class EnhancedFeatureExtractor {
     private static final SimpleTokenizer TOKENIZER = new SimpleTokenizer(true);
 
     /**
-     * <p>buildFilteredIngredientVocabulary.</p>
+     * Buduje słownik składników, filtrując te, które pojawiają się zbyt często.
      *
-     * @param cocktails a {@link java.util.List} object
-     * @param threshold a double
-     * @return a {@link java.util.List} object
+     * @param cocktails Lista koktajli.
+     * @param threshold Próg, powyżej którego składnik jest odrzucany.
+     * @return Posortowana lista przetworzonych nazw składników.
      */
     public static List<String> buildFilteredIngredientVocabulary(List<Cocktail> cocktails, double threshold) {
-        Map<String, Integer> freq = new HashMap<>();
-        
+        Map<String, Integer> frequency = new HashMap<>();
+
         for (Cocktail cocktail : cocktails) {
             Set<String> uniqueIngredients = new HashSet<>();
             for (Ingredient ing : cocktail.getIngredients()) {
@@ -39,18 +41,24 @@ public class EnhancedFeatureExtractor {
                     }
                 }
             }
-            uniqueIngredients.forEach(name -> freq.put(name, freq.getOrDefault(name, 0) + 1));
+            uniqueIngredients.forEach(name -> frequency.put(name, frequency.getOrDefault(name, 0) + 1));
         }
 
-        return freq.entrySet().stream()
+        return frequency.entrySet().stream()
                 .filter(entry -> (double) entry.getValue() / cocktails.size() < threshold)
                 .map(Map.Entry::getKey)
                 .sorted()
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Przetwarza nazwę składnika – tokenizacja, zamiana na małe litery, usunięcie stop-słów, stemming.
+     *
+     * @param name Nazwa składnika.
+     * @return Przetworzona nazwa.
+     */
     private static String processIngredientName(String name) {
-        return Arrays.stream(TOKENIZER.split(name))
+        return Stream.of(TOKENIZER.split(name))
                 .map(String::toLowerCase)
                 .filter(token -> !EnglishStopWords.DEFAULT.contains(token))
                 .map(STEMMER::stem)
@@ -58,20 +66,18 @@ public class EnhancedFeatureExtractor {
     }
 
     /**
-     * Tworzy wektory cech TF–IDF:
-     * - TF: dla uproszczenia binarne (1, jeśli termin występuje, 0 w przeciwnym wypadku).
-     * - IDF: obliczane jako log(N / (1 + df)).
+     * Tworzy wektory cech TF–IDF z wykorzystaniem binarnego TF (0 lub 1) oraz klasycznego wzoru IDF.
      *
-     * @param cocktails a {@link java.util.List} object
-     * @param vocabulary a {@link java.util.List} object
-     * @return a {@link java.util.List} object
+     * @param cocktails  Lista koktajli.
+     * @param vocabulary Lista wybranych składników (słownik).
+     * @return Lista wektorów cech reprezentowanych jako double[].
      */
     public static List<double[]> createTFIDFFeatureVectors(List<Cocktail> cocktails, List<String> vocabulary) {
         int N = cocktails.size();
         int V = vocabulary.size();
         double[] df = new double[V];
 
-        // Obliczanie df: dla każdego terminu, w ilu dokumentach występuje
+        // Obliczenie liczby dokumentów zawierających dany termin
         for (Cocktail cocktail : cocktails) {
             Set<String> present = cocktail.getIngredients().stream()
                     .map(Ingredient::getName)
@@ -100,9 +106,10 @@ public class EnhancedFeatureExtractor {
                     .map(EnhancedFeatureExtractor::processIngredientName)
                     .collect(Collectors.toSet());
             for (int i = 0; i < V; i++) {
-                double tf =present.contains(vocabulary.get(i)) ? 1.0 : 0.0;
+                double tf = present.contains(vocabulary.get(i)) ? 1.0 : 0.0;
                 vector[i] = tf * idf[i];
             }
+            // Normalizacja wektora
             double norm = Math.sqrt(Arrays.stream(vector).map(x -> x * x).sum());
             if (norm > 0) {
                 for (int i = 0; i < V; i++) {
@@ -114,4 +121,4 @@ public class EnhancedFeatureExtractor {
         return featureVectors;
     }
 }
-         
+        

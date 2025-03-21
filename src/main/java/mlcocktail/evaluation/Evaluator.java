@@ -1,4 +1,4 @@
-package mlcocktail.eda;
+package mlcocktail.evaluation;
 
 import java.util.*;
 import smile.math.distance.EuclideanDistance;
