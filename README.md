@@ -79,7 +79,7 @@ mvn exec:java@run
 ```
 
 ## ⚙️ Konfiguracja
-Zmianę konfiguracji dokonuje się bezpośrednio w [MainPipeline.java](./src/main/java/ml-cocktail-analysis/MainPipeline.java)
+Zmianę konfiguracji dokonuje się bezpośrednio w [MainPipeline.java](./src/main/java/ml-cocktail/MainPipeline.java)
 | Komponent          | Opcje                          |
 |--------------------|----------------------------------|
 | **Clustering**     | K-Means, DBSCAN, X-Means         |
